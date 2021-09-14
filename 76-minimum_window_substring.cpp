@@ -45,63 +45,60 @@ using namespace std;
 
 class Solution {
 public:
-    
-    bool contains(std::unordered_map<char, int>& count, std::unordered_map<char, int>& match) {
-        for(auto& el : match) {
-            auto x = count.find(el.first);
-            if(x == count.end() || el.second > x->second) {
-                return false;
-            }
-        }
-        return true;
-    }
-    
+
     string minWindow(string s, string t) {
         
         if (t.length() > s.length())
             return "";
         
-        int i = 0, j = 0, n = s.length();
-        std::unordered_map<char, int> count;
-        std::unordered_map<char, int> match;
+        int tcount [128];
+        int scount [128];
         
+        std::memset(tcount, 0, sizeof(int) * 128);    
+        std::memset(scount, 0, sizeof(int) * 128);
+        
+        int i = 0, j = 0, n = s.length();
+        int tchars = 0;
         for(auto c : t) {
-            if(match.find(c) == match.end()) {
-                match[c] = 1;
-            } else {
-                match[c]++;
-            }
+            if(tcount[c] == 0) tchars++;
+            tcount[c]++;
         }
         
         string solution;
+        int isol = 0, jsol = 0;
         int lenSolution = n + 1;
+
+        int schars = 0;
+        
         do {
-            if(count.find(s[j]) == match.end()) {
-                count[s[j]] = 1;
-            } else {
-                count[s[j]]++;
-            }
-                
-            if (contains(count, match)) {
-                do {
-                    auto matchj = match.find(s[i]);
-                    if (matchj != match.end() && count[s[i]] == matchj->second) {
-                        if(lenSolution > j-i) {
-                            solution = s.substr(i, j-i+1);
-                            lenSolution = j-i;
+            scount[s[j]]++;
+            
+            if(tcount[s[j]] == scount[s[j]]) {
+                schars++;
+                if (schars == tchars) { //there is a match
+                    do {
+                        if (scount[s[i]] == tcount[s[i]]) {
+                            if(lenSolution > j-i) {
+                                isol = i;
+                                jsol = j;
+                                lenSolution = j-i;
+                            }
+                            schars--;
+                            scount[s[i]]--;
+                            i++;
+                            break;
                         }
-                        count[s[i]]--;
+                        scount[s[i]]--;
                         i++;
-                        break;
-                    }
-                    count[s[i]]--;
-                    i++;
-                } while(true);
+                    }while(true);
+                }
             }
             j++;
+            
         } while (j != n);
         
-        return solution;
+        if (lenSolution > n) return string();
+        return s.substr(isol, jsol-isol+1);
     }
 };
 
